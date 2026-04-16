@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique @db.VarChar(50)
+  email        String   @unique @db.VarChar(100)
+  passwordHash String   @db.VarChar(255)
+  fullName     String?  @db.VarChar(100)
+  avatarUrl    String?  @db.VarChar(255)
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tasks        Task[]
+  categories   Category[]
+  aiMetrics    AiMetric[]
+
+  @@map("users")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  name      String   @db.VarChar(100)
+  color     String?  @default("#6366f1") @db.VarChar(7)
+  icon      String?  @db.VarChar(50)
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+  aiMetrics AiMetric[]
+
+  @@map("categories")
+}
+
+model Task {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  categoryId       Int?
+  title            String   @db.VarChar(255)
+  description      String?  @db.Text
+  priorityQuadrant PriorityQuadrant @default(NOT_URGENT_IMPORTANT)
+  priorityScore    Decimal? @default(0.0) @db.Decimal(5,2)
+  estimatedDuration Int?    @default(30)
+  dueDate          DateTime?
+  tags             Json?
+  isCompleted      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category         Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  schedules        Schedule[]
+
+  @@index([userId])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+model Schedule {
+  id             Int      @id @default(autoincrement())
+  taskId         Int
+  startTime      DateTime
+  endTime        DateTime
+  bufferApplied  Int?     @default(0)
+  status         ScheduleStatus @default(PENDING)
+  panicModeFlag  Boolean? @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  task           Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  executionLogs  ExecutionLog[]
+
+  @@index([status])
+  @@index([startTime])
+  @@map("schedules")
+}
+
+model ExecutionLog {
+  id             Int      @id @default(autoincrement())
+  scheduleId     Int
+  actualStart    DateTime?
+  actualEnd      DateTime?
+  efficiencyRate Decimal? @default(0.0) @db.Decimal(5,2)
+  notes          String?  @db.Text
+  createdAt      DateTime @default(now())
+
+  schedule       Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@index([scheduleId])
+  @@map("execution_logs")
+}
+
+model AiMetric {
+  id                   Int      @id @default(autoincrement())
+  userId               Int
+  categoryId           Int?
+  avgDelayPercentage   Decimal? @default(0.0) @db.Decimal(5,2)
+  totalTasksAnalyzed   Int?     @default(0)
+  lastAnalyzedAt       DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category             Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, categoryId])
+  @@map("ai_metrics")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum PriorityQuadrant {
+  URGENT_IMPORTANT
+  NOT_URGENT_IMPORTANT
+  URGENT_NOT_IMPORTANT
+  NOT_URGENT_NOT_IMPORTANT
+}
+
+enum ScheduleStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+  CANCELLED
+}

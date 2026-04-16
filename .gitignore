@@ -1,0 +1,41 @@
+# Environment
+.env
+*.env.local
+
+# Compiled
+target/
+*.class
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.suo
+*.user
+
+# Node / Frontend
+node_modules/
+.next/
+out/
+dist/
+.npm
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+mysql_data/
+redis_data/
+
+# Credentials (NEVER commit)
+credentials/
+*.json
+!package.json
+!tsconfig.json

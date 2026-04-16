@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # ---- MySQL Database ----
+  mysql:
+    image: mysql:8.0
+    container_name: smart_life_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-smartlife123}
+      MYSQL_DATABASE: smart_life_os
+      MYSQL_USER: ${DB_USERNAME:-smartlife}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-smartlife123}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - smart_life_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+
+  # ---- Redis Cache ----
+  redis:
+    image: redis:7-alpine
+    container_name: smart_life_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - smart_life_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 5s
+      retries: 3
+
+  # ---- Spring Boot Backend ----
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smart_life_backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_USERNAME: ${DB_USERNAME:-smartlife}
+      DB_PASSWORD: ${DB_PASSWORD:-smartlife123}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-smartlifeossecretkeyforproduction2024}
+      GOOGLE_PROJECT_ID: ${GOOGLE_PROJECT_ID}
+      GOOGLE_APPLICATION_CREDENTIALS: /app/credentials/gcp-key.json
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./credentials:/app/credentials:ro
+    networks:
+      - smart_life_net
+
+  # ---- Next.js Frontend ----
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: smart_life_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080/api/v1
+    ports:
+      - "3000:3000"
+    networks:
+      - smart_life_net
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  smart_life_net:
+    driver: bridge
