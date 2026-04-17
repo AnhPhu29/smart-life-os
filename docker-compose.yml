@@ -57,6 +57,7 @@ services:
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-smartlifeossecretkeyforproduction2024}
       GOOGLE_PROJECT_ID: ${GOOGLE_PROJECT_ID}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
       GOOGLE_APPLICATION_CREDENTIALS: /app/credentials/gcp-key.json
     ports:
       - "8080:8080"

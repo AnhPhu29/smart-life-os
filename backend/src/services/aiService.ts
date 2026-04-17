@@ -26,13 +26,8 @@ export class AiService {
     };
 
     // Check if API key is configured
-    if (
-      !process.env.GEMINI_API_KEY ||
-      process.env.GEMINI_API_KEY === "YOUR_GEMINI_API_KEY"
-    ) {
-      console.warn(
-        "Missing or invalid GEMINI_API_KEY, using default classification",
-      );
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn("Missing GEMINI_API_KEY, using default classification");
       return defaultResult;
     }
 
