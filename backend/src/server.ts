@@ -12,9 +12,17 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+
+// CORS allowed origins
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  process.env.FRONTEND_URL || "https://smart-life-os-fe.vercel.app",
+];
+
 const io = new SocketIOServer(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    origin: allowedOrigins,
     credentials: true,
   },
 });
@@ -23,7 +31,7 @@ const PORT = process.env.PORT || 8080;
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
