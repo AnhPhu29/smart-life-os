@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # ---- MySQL Database ----
@@ -51,8 +51,8 @@ services:
       redis:
         condition: service_healthy
     environment:
-      DB_USERNAME: ${DB_USERNAME:-smartlife}
-      DB_PASSWORD: ${DB_PASSWORD:-smartlife123}
+      DATABASE_URL: mysql://${DB_USERNAME:-smartlife}:${DB_PASSWORD:-smartlife123}@mysql:3306/smart_life_os
+      REDIS_URL: redis://redis:6379
       REDIS_HOST: redis
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-smartlifeossecretkeyforproduction2024}
