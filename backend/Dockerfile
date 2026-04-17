@@ -1,7 +1,7 @@
 # Backend Dockerfile - Multi-stage build for optimization
 
 # Stage 1: Build
-FROM node:20-alpine as builder
+FROM node:20-slim as builder
 
 WORKDIR /app
 
@@ -21,12 +21,12 @@ RUN npm run build
 RUN npm run prisma:generate
 
 # Stage 2: Runtime
-FROM node:20-alpine
+FROM node:20-slim
 
 WORKDIR /app
 
-# Install dumb-init to handle signals properly
-RUN apk add --no-cache dumb-init
+# Install dumb-init and openssl for Prisma
+RUN apt-get update && apt-get install -y dumb-init openssl && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
